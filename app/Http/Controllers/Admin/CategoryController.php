@@ -17,7 +17,7 @@ class CategoryController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $categories = $query->latest()->paginate(10)->withQueryString();
+        $categories = Category::withCount('events')->latest()->paginate(10)->withQueryString();
 
         return view('admin.categories.index', compact('categories'));
     }

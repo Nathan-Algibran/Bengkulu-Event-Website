@@ -55,7 +55,9 @@ class EventController extends Controller
         };
 
         $events     = $query->paginate(12)->withQueryString();
-        $categories = Category::all();
+        $categories = Category::withCount(['events' => function($q) {
+            $q->where('is_active', true);
+        }])->get();
 
         // Ambil ID event yang sudah difavoritkan user
         $favoriteIds = Auth::user()

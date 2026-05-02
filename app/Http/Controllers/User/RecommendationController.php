@@ -12,55 +12,55 @@ class RecommendationController extends Controller
     {
         $user = Auth::user();
 
-        // Event Rekomendasi dari Admin
         $recommendedEvents = Event::with('category')
             ->where('is_active', true)
             ->where('is_recommended', true)
             ->latest()
             ->get();
 
-        // Event Populer
         $popularEvents = Event::with('category')
             ->where('is_active', true)
             ->where('is_popular', true)
             ->orderByDesc('view_count')
             ->get();
 
-        // Rekomendasi Personal — berdasarkan kategori favorit user
-        $favoriteCategoryIds = $user->favoriteEvents()
-            ->pluck('category_id')
-            ->unique()
-            ->toArray();
+        // Ambil langsung dari tabel favorites dengan join
+        $favoriteData = \DB::table('favorites')
+            ->join('events', 'favorites.event_id', '=', 'events.id')
+            ->where('favorites.user_id', $user->id)
+            ->select('events.id', 'events.category_id')
+            ->get();
 
+        $favoriteEventIds    = $favoriteData->pluck('id')->toArray();
+        $favoriteCategoryIds = $favoriteData->pluck('category_id')->unique()->toArray();
+
+        // Tampilkan semua event di kategori favorit
+        // (termasuk yang sudah difavoritkan agar tidak kosong)
         $personalEvents = collect();
         if (!empty($favoriteCategoryIds)) {
             $personalEvents = Event::with('category')
                 ->where('is_active', true)
                 ->whereIn('category_id', $favoriteCategoryIds)
-                ->whereNotIn('id', $user->favoriteEvents()->pluck('events.id')->toArray())
                 ->latest()
                 ->take(8)
                 ->get();
         }
 
-        // Event Terbaru
         $latestEvents = Event::with('category')
             ->where('is_active', true)
             ->latest()
             ->take(6)
             ->get();
 
-        // Ambil ID favorit user untuk tombol favorit
-        $favoriteIds = $user->favoriteEvents()
-            ->pluck('events.id')
-            ->toArray();
+        $favoriteIds = $favoriteEventIds;
 
-        return view('user.recommendations.index', compact(
-            'recommendedEvents',
-            'popularEvents',
-            'personalEvents',
-            'latestEvents',
-            'favoriteIds'
-        ));
+        return view('user.recommendations.index', [
+            'recommendedEvents' => $recommendedEvents,
+            'popularEvents'     => $popularEvents,
+            'personalEvents'    => $personalEvents,
+            'latestEvents'      => $latestEvents,
+            'favoriteIds'       => $favoriteIds,
+            'user'              => $user,
+        ]);
     }
 }
