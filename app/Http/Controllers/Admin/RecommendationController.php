@@ -29,9 +29,13 @@ class RecommendationController extends Controller
 
         $totalRecommended = Event::where('is_recommended', true)->count();
         $totalPopular     = Event::where('is_popular', true)->count();
+        $totalUntagged    = Event::where('is_active', true)
+                                 ->where('is_recommended', false)
+                                 ->where('is_popular', false)
+                                 ->count();
 
         return view('admin.recommendations.index', compact(
-            'events', 'totalRecommended', 'totalPopular'
+            'events', 'totalRecommended', 'totalPopular', 'totalUntagged'
         ));
     }
 
@@ -55,33 +59,29 @@ class RecommendationController extends Controller
 
     public function statistics()
     {
-        // Event paling banyak difavoritkan
         $mostFavorited = Event::withCount('favorites')
             ->with('category')
             ->orderByDesc('favorites_count')
             ->take(10)
             ->get();
 
-        // Event paling banyak dilihat
         $mostViewed = Event::with('category')
             ->orderByDesc('view_count')
             ->take(10)
             ->get();
 
-        // Statistik per kategori
         $categoryStats = \App\Models\Category::withCount('events')
             ->orderByDesc('events_count')
             ->get();
 
-        // Ringkasan
         $summary = [
-            'total_events'       => Event::count(),
-            'active_events'      => Event::where('is_active', true)->count(),
-            'total_recommended'  => Event::where('is_recommended', true)->count(),
-            'total_popular'      => Event::where('is_popular', true)->count(),
-            'total_favorites'    => \App\Models\Favorite::count(),
-            'free_events'        => Event::where('price', 0)->count(),
-            'paid_events'        => Event::where('price', '>', 0)->count(),
+            'total_events'      => Event::count(),
+            'active_events'     => Event::where('is_active', true)->count(),
+            'total_recommended' => Event::where('is_recommended', true)->count(),
+            'total_popular'     => Event::where('is_popular', true)->count(),
+            'total_favorites'   => \App\Models\Favorite::count(),
+            'free_events'       => Event::where('price', 0)->count(),
+            'paid_events'       => Event::where('price', '>', 0)->count(),
         ];
 
         return view('admin.recommendations.statistics', compact(

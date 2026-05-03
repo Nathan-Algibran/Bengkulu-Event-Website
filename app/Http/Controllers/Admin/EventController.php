@@ -73,6 +73,9 @@ class EventController extends Controller
             'quota'       => $request->quota,
             'image'       => $imagePath,
             'is_active'   => $request->boolean('is_active', true),
+            'is_recommended' => $request->boolean('is_recommended', false), // ← TAMBAH INI
+            'is_popular'     => $request->boolean('is_popular', false),     // ← TAMBAH INI
+
         ]);
 
         return redirect()->route('admin.events.index')
@@ -126,6 +129,8 @@ class EventController extends Controller
             'quota'       => $request->quota,
             'image'       => $imagePath,
             'is_active'   => $request->boolean('is_active', true),
+            'is_recommended' => $request->boolean('is_recommended', false), // ← TAMBAH INI
+            'is_popular'     => $request->boolean('is_popular', false),     // ← TAMBAH INI
         ]);
 
         return redirect()->route('admin.events.index')
